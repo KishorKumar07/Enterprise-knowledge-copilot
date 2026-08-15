@@ -1,0 +1,6 @@
+venv/
+certs/
+__pycache__/
+*.pyc
+.env
+.env.local
