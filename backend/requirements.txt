@@ -1,0 +1,30 @@
+# CPU-only torch build — without this, a plain `pip install` resolves the
+# ~2GB CUDA build, which is both wasted space and slower to install on any
+# CPU-only host (which is every free tier).
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.13.0+cpu
+
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+sqlalchemy==2.0.36
+asyncpg==0.30.0
+alembic==1.14.0
+pydantic==2.13.4
+email-validator==2.3.0
+pydantic-settings==2.7.1
+passlib[bcrypt]==1.7.4
+bcrypt==4.2.1
+pyjwt==2.10.1
+python-multipart==0.0.20
+httpx==0.28.1
+cryptography==44.0.0
+python-dotenv==1.0.1
+certifi==2026.7.22
+pypdf==5.1.0
+python-docx==1.1.2
+pgvector==0.3.6
+sentence-transformers==3.3.1
+langgraph==0.2.62
+google-genai==2.18.1
+openai==3.1.0
+slowapi==0.1.9

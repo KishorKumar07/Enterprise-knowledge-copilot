@@ -1,0 +1,20 @@
+# Python
+backend/venv/
+__pycache__/
+*.pyc
+
+# Env
+.env
+.env.local
+
+# Node
+node_modules/
+frontend/.next/
+frontend/out/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local test content (not part of the product)
+sample-drive-content/
