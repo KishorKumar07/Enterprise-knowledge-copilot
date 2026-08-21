@@ -28,3 +28,21 @@ langgraph==0.2.62
 google-genai==2.18.1
 openai==3.1.0
 slowapi==0.1.9
+
+# Agent ops: metrics (Prometheus/Grafana) + tracing (OpenTelemetry -> Phoenix).
+# Pinned to <8 on the instrumentator: 8.x requires starlette>=1.0, which
+# conflicts with the starlette fastapi==0.115.6 pulls in.
+prometheus-fastapi-instrumentator==7.1.0
+opentelemetry-sdk==1.44.0
+opentelemetry-exporter-otlp-proto-http==1.44.0
+openinference-instrumentation-google-genai==1.4.1
+openinference-instrumentation-openai==0.1.54
+
+# Eval harness (backend/tests/eval) — LLM-as-judge RAG quality gates.
+# Deliberately hand-rolled on top of app/services/llm.py rather than pulling
+# in RAGAS: RAGAS's current release requires langchain>=1.x, which forces a
+# langgraph>=1.2 upgrade that breaks the pinned langgraph==0.2.62 agent
+# pipeline above (confirmed by trying it) — not worth the conflict for what
+# is, under the hood, the same "prompt an LLM judge, parse a score" idea.
+pytest==9.1.1
+pytest-asyncio==1.4.0

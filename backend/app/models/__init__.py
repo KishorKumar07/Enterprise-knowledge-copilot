@@ -7,6 +7,7 @@ from app.models.document_chunk import DocumentChunk
 from app.models.sync_job import SyncJob
 from app.models.conversation import Conversation
 from app.models.message import Message
+from app.models.agent_run import AgentRun, AgentStep
 
 __all__ = [
     "Organization",
@@ -18,4 +19,6 @@ __all__ = [
     "SyncJob",
     "Conversation",
     "Message",
+    "AgentRun",
+    "AgentStep",
 ]

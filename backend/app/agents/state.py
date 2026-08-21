@@ -14,6 +14,8 @@ class AgentState(TypedDict, total=False):
     query: str
     history: list[ChatTurn]
 
+    run_id: UUID | None  # agent_ops: ties node executions back to an AgentRun row
+
     needs_retrieval: bool
     supervisor_reasoning: str
 
