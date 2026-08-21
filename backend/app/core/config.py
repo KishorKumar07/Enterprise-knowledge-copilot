@@ -44,6 +44,12 @@ class Settings(BaseSettings):
     groq_model: str = "llama-3.3-70b-versatile"
     groq_utility_model: str = "llama-3.1-8b-instant"
 
+    # Agent ops: OpenTelemetry traces go to a self-hosted Phoenix instance
+    # (docker-compose service). Disabling this is safe — export failures are
+    # non-fatal, this just avoids the background exporter entirely.
+    otel_enabled: bool = True
+    phoenix_endpoint: str = "http://localhost:6006"
+
 
 @lru_cache
 def get_settings() -> Settings:

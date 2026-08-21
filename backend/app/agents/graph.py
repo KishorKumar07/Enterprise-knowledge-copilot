@@ -14,15 +14,19 @@ from app.agents.research_agent import research_node
 from app.agents.retrieval_agent import retrieval_node
 from app.agents.state import AgentState
 from app.agents.supervisor import supervisor_node
+from app.agents.tracing import traced_node
 
 
 def build_graph():
     graph = StateGraph(AgentState)
 
-    graph.add_node("supervisor", supervisor_node)
-    graph.add_node("retrieval", retrieval_node)
-    graph.add_node("research", research_node)
-    graph.add_node("answer_agent", answer_node)
+    # Each node is wrapped for agent_ops: an OpenTelemetry span (Phoenix), a
+    # Prometheus observation (Grafana), and an AgentStep row (Postgres audit
+    # trail) — see app/agents/tracing.py.
+    graph.add_node("supervisor", traced_node("supervisor", supervisor_node))
+    graph.add_node("retrieval", traced_node("retrieval", retrieval_node))
+    graph.add_node("research", traced_node("research", research_node))
+    graph.add_node("answer_agent", traced_node("answer_agent", answer_node))
 
     graph.set_entry_point("supervisor")
     graph.add_edge("supervisor", "retrieval")

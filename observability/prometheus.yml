@@ -1,0 +1,12 @@
+global:
+  scrape_interval: 10s
+
+scrape_configs:
+  - job_name: "ekc-backend"
+    metrics_path: /metrics
+    static_configs:
+      # host.docker.internal resolves to the host machine from inside a
+      # container on Docker Desktop (Windows/Mac). On native Linux Docker,
+      # add `extra_hosts: ["host.docker.internal:host-gateway"]` to the
+      # prometheus service in docker-compose.yml.
+      - targets: ["host.docker.internal:8000"]

@@ -3,12 +3,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, MessageSquare, Database, Settings } from "lucide-react";
+import { LayoutDashboard, MessageSquare, Database, Activity, Settings } from "lucide-react";
 
 const NAV_ITEMS = [
   { href: "/app", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { href: "/app/chat", label: "Chat", icon: MessageSquare, exact: false },
   { href: "/app/sources", label: "Sources", icon: Database, exact: false },
+  { href: "/app/agent-ops", label: "Agent Ops", icon: Activity, exact: false },
   { href: "/app/settings", label: "Settings", icon: Settings, exact: false },
 ];
 
