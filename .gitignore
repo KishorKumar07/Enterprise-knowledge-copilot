@@ -18,3 +18,7 @@ Thumbs.db
 
 # Local test content (not part of the product)
 sample-drive-content/
+
+# Separate git repo (github.com/KishorKumar07/System-Design-Studio) that lives
+# inside this folder locally. Ignored so it is never committed as a pointer.
+System-Design-Studio/
