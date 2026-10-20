@@ -12,9 +12,17 @@ name: Deploy
 #   APP_INSTANCE_ID    EC2 instance id of apps-prod
 #   DEPLOY_ENABLED     "true" once the server is prepared; until then only the
 #                      build + push to ECR runs and the deploy stages are skipped
+#
+# While the server is stopped to save credits, set DEPLOY_ENABLED to "false" (or
+# delete it): otherwise the deploy job fails because nothing answers over SSM.
+# Set it back to "true" after starting the server.
 on:
   push:
     branches: [main]
+    # Documentation-only pushes don't change what runs, so don't rebuild 2 GB
+    # of images or touch the server for them.
+    paths-ignore:
+      - "**.md"
   workflow_dispatch:
 
 # Two deploys racing one database is a bad afternoon. Queue, never cancel.
