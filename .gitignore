@@ -28,3 +28,6 @@ sample-drive-content/
 # Deployment notes contain the AWS account ID, server IP and hostnames. The GitHub
 # repo is public, so keep this local.
 AWS-DEPLOYMENT-PLAN.md
+
+# Personal interview prep (not for the public repo)
+INTERVIEW-NOTES.md
