@@ -104,6 +104,12 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Generate Next route types
+        # LayoutProps/PageProps are generated into .next/types. A clean checkout
+        # doesn't have them, so tsc fails with "Cannot find name 'LayoutProps'"
+        # even though it passes on a machine that has run `next dev` before.
+        run: npx next typegen
+
       - name: Typecheck
         run: npx tsc --noEmit
 
