@@ -36,6 +36,12 @@ class Settings(BaseSettings):
 
     # Primary LLM provider. Falls back to Groq automatically if Gemini is
     # unconfigured or a call to it fails — see app/services/llm.py.
+    # Which provider is tried first: "groq" or "gemini". The other is the fallback.
+    # Defaults to Groq: from the EC2 server in Mumbai Gemini calls took 10-20 s
+    # (vs ~2 s from a laptop) while Groq answered in ~1.5 s. Set LLM_PRIMARY=gemini
+    # to flip it back. A provider with no API key is skipped either way.
+    llm_primary: str = "groq"
+
     gemini_api_key: str = ""
     gemini_model: str = "gemini-flash-latest"
     gemini_utility_model: str = "gemini-flash-lite-latest"

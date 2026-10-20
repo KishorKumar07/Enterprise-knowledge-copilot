@@ -96,6 +96,69 @@
         }
       ],
       "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] }
+    },
+    {
+      "id": 7,
+      "title": "LLM calls by provider and outcome (per 5 min)",
+      "description": "Every call to Groq or Gemini. A growing red/error line for the primary means it is failing and the fallback is covering for it.",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "expr": "sum(increase(llm_call_total[5m])) by (provider, kind, outcome)",
+          "legendFormat": "{{provider}} {{kind}} {{outcome}}",
+          "datasource": { "type": "prometheus", "uid": "prometheus" }
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "none", "decimals": 0 }, "overrides": [] }
+    },
+    {
+      "id": 8,
+      "title": "Fallbacks in the last hour (primary failed, next model answered)",
+      "description": "How many times the first-choice model failed and the other one took over. 0 is healthy.",
+      "type": "stat",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 24 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "expr": "sum(increase(llm_fallback_total[1h])) by (from_provider, to_provider)",
+          "legendFormat": "{{from_provider}} -> {{to_provider}}",
+          "datasource": { "type": "prometheus", "uid": "prometheus" }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 1 },
+              { "color": "red", "value": 5 }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 9,
+      "title": "LLM latency p95 (whole call; first token for streams)",
+      "description": "How long each provider takes to respond. Compare Groq and Gemini here.",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 32 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(llm_latency_seconds_bucket[15m])) by (le, provider, kind))",
+          "legendFormat": "{{provider}} {{kind}}",
+          "datasource": { "type": "prometheus", "uid": "prometheus" }
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] }
     }
   ]
 }

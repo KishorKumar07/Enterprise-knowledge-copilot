@@ -27,3 +27,25 @@ agent_run_total = Counter(
     "Agent graph runs",
     labelnames=["status"],
 )
+
+# LLM provider health: which model answered, which failed, and how often the
+# fallback had to take over. Labelled by provider so a slow or failing primary
+# is visible on the dashboard instead of only in the logs.
+llm_call_total = Counter(
+    "llm_call_total",
+    "LLM provider calls",
+    labelnames=["provider", "kind", "outcome"],  # kind: complete|stream, outcome: success|error
+)
+
+llm_fallback_total = Counter(
+    "llm_fallback_total",
+    "Times a provider failed and the next one was tried",
+    labelnames=["from_provider", "to_provider"],
+)
+
+llm_latency_seconds = Histogram(
+    "llm_latency_seconds",
+    "complete(): whole call. stream: time to the first token.",
+    labelnames=["provider", "kind"],
+    buckets=(0.25, 0.5, 1, 2, 3, 5, 8, 12, 20, 30, 60),
+)
