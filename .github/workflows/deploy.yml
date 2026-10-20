@@ -23,6 +23,8 @@ on:
     # of images or touch the server for them.
     paths-ignore:
       - "**.md"
+      # Host-monitoring installer: nothing the running app depends on.
+      - "deploy/cloudwatch-agent.sh"
   workflow_dispatch:
 
 # Two deploys racing one database is a bad afternoon. Queue, never cancel.
