@@ -138,7 +138,8 @@ async def regenerate_last_message(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> StreamingResponse:
-    conversation = await _get_owned_conversation(db, conversation_id, current_user)
+    # Called for its ownership check (404s if the conversation isn't the user's).
+    await _get_owned_conversation(db, conversation_id, current_user)
 
     result = await db.execute(
         select(Message).where(Message.conversation_id == conversation_id).order_by(Message.created_at)

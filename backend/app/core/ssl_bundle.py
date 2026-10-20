@@ -37,6 +37,13 @@ def _build_bundle() -> Path:
         for der_bytes, _encoding, trusted in ssl.enum_certificates("ROOT"):
             if trusted:
                 certs_pem.append(ssl.DER_cert_to_PEM_cert(der_bytes))
+    else:
+        # In a container the OS store is the system bundle, which is where a
+        # local build's extra root CA lands (see the Dockerfile's .local-ca step).
+        # On a normal host it is just the standard public CAs, so this is a no-op.
+        system_bundle = Path("/etc/ssl/certs/ca-certificates.crt")
+        if system_bundle.exists():
+            certs_pem.append(system_bundle.read_text(encoding="utf-8"))
 
     _BUNDLE_PATH.write_text("\n".join(certs_pem), encoding="utf-8")
     return _BUNDLE_PATH

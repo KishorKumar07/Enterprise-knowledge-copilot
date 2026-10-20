@@ -133,7 +133,7 @@ async def run_google_drive_sync(organization_id: UUID, connection_id: UUID, sync
             job.error = str(exc)
             job.completed_at = datetime.now(timezone.utc)
             await db.commit()
-        except Exception as exc:  # noqa: BLE001
+        except Exception:  # noqa: BLE001
             logger.exception("Google Drive sync job %s failed", sync_job_id)
             job.status = "failed"
             job.error = "Sync failed unexpectedly. Please try again."

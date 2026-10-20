@@ -3,9 +3,12 @@ backend/venv/
 __pycache__/
 *.pyc
 
-# Env
+# Env — every .env* except the committed examples.
 .env
-.env.local
+.env.*
+!.env.example
+!.env.docker.example
+!.env.local.example
 
 # Node
 node_modules/
@@ -18,3 +21,10 @@ Thumbs.db
 
 # Local test content (not part of the product)
 sample-drive-content/
+
+# Machine-specific root CAs for local Docker builds (see the Dockerfiles).
+*/.local-ca/*.crt
+
+# Deployment notes contain the AWS account ID, server IP and hostnames. The GitHub
+# repo is public, so keep this local.
+AWS-DEPLOYMENT-PLAN.md

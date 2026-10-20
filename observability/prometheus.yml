@@ -5,8 +5,11 @@ scrape_configs:
   - job_name: "ekc-backend"
     metrics_path: /metrics
     static_configs:
-      # host.docker.internal resolves to the host machine from inside a
-      # container on Docker Desktop (Windows/Mac). On native Linux Docker,
-      # add `extra_hosts: ["host.docker.internal:host-gateway"]` to the
-      # prometheus service in docker-compose.yml.
-      - targets: ["host.docker.internal:8000"]
+      # The backend is a container on the same compose network, so scrape it by
+      # service name on its own port (7860 — see backend/Dockerfile).
+      #
+      # This used to be host.docker.internal:8000, which only worked when the
+      # backend ran on the host under `uvicorn --reload` on Docker Desktop.
+      # On Linux (i.e. the EC2 box) that name doesn't resolve and the port was
+      # wrong anyway, so every Grafana panel showed "No data".
+      - targets: ["backend:7860"]

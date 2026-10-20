@@ -11,8 +11,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { agentOpsService } from "@/services/agent-ops";
 import type { AgentOpsStats, AgentRun, AgentRunDetail, AgentRunStatus } from "@/types/agent-ops";
 
-const GRAFANA_URL = "http://localhost:3001";
-const PHOENIX_URL = "http://localhost:6006";
+// These open in the viewer's browser, so "localhost" would mean *their* machine,
+// not the server — the links were dead once deployed. NEXT_PUBLIC_* values are
+// inlined at build time, so these come in as build args (see frontend/Dockerfile);
+// the fallbacks keep local dev working with no env file.
+const GRAFANA_URL = process.env.NEXT_PUBLIC_GRAFANA_URL ?? "http://localhost:3001";
+const PHOENIX_URL = process.env.NEXT_PUBLIC_PHOENIX_URL ?? "http://localhost:6006";
 
 const STATUS_VARIANT: Record<AgentRunStatus, "secondary" | "destructive" | "outline"> = {
   completed: "secondary",

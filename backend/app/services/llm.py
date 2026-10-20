@@ -55,7 +55,16 @@ def _get_gemini_client() -> genai.Client:
     if _gemini_client is None:
         _gemini_client = genai.Client(
             api_key=settings.gemini_api_key,
-            http_options=genai_types.HttpOptions(httpx_async_client=_new_async_http_client()),
+            http_options=genai_types.HttpOptions(
+                httpx_async_client=_new_async_http_client(),
+                # Gemini sometimes returns 503 "high demand". The SDK's default is
+                # to retry with backoff for a long time, which stalled answers for
+                # ~130s before the Groq fallback ever got a chance. Fail fast instead:
+                # a 20s ceiling and no retry (a healthy first token takes ~3s), then
+                # the caller falls back to Groq.
+                timeout=20_000,
+                retry_options=genai_types.HttpRetryOptions(attempts=1),
+            ),
         )
     return _gemini_client
 

@@ -14,7 +14,7 @@ not depend on so it stays fully testable offline.
 from dataclasses import dataclass
 from uuid import UUID
 
-from sqlalchemy import func, select, text
+from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.document import Document

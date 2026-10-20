@@ -1,0 +1,114 @@
+name: CI
+
+# Runs on every push and PR to main, and is also callable from the deploy
+# workflow so a deploy can only start after these checks are green.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_call:
+
+# A newer push to the same branch makes the older run pointless.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Backend (lint, tests, migrations)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    # A real Postgres + pgvector, health-gated, thrown away after the job.
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: ekc
+          POSTGRES_PASSWORD: ci_test_password
+          POSTGRES_DB: ekc_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ekc -d ekc_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    defaults:
+      run:
+        working-directory: backend
+
+    env:
+      # No tracing exporter in CI; there is no Phoenix to send spans to.
+      OTEL_ENABLED: "false"
+      DATABASE_URL: postgresql+asyncpg://ekc:ci_test_password@localhost:5432/ekc_ci
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          # torch alone is ~200 MB of wheels; without the cache every run re-downloads it.
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt ruff
+
+      - name: Lint (ruff, real-bug rules only - see backend/ruff.toml)
+        run: ruff check app
+
+      - name: Import smoke test
+        run: python -c "import app.main"
+
+      - name: Unit tests (no network, no API keys)
+        # tests/eval is the LLM-judge suite: nondeterministic and spends quota,
+        # so it runs on a schedule (eval.yml), not on every push.
+        run: python -m pytest tests --ignore=tests/eval -v
+
+      - name: Migrations apply to an empty database
+        run: alembic upgrade head
+
+      - name: Migrations are reversible and re-appliable
+        run: |
+          alembic downgrade base
+          alembic upgrade head
+
+  frontend:
+    name: Frontend (lint, types, build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Build
+        run: npm run build
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:7860
+          NEXT_TELEMETRY_DISABLED: "1"

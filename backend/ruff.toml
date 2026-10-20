@@ -1,0 +1,11 @@
+# CI gate: real bugs only (syntax errors + pyflakes), not style. Pinned
+# explicitly so a newer ruff release can't change what "passing" means.
+target-version = "py311"
+
+[lint]
+select = ["E9", "F"]
+
+[lint.per-file-ignores]
+# SQLAlchemy relationship("User") / Mapped["Organization"] are string forward
+# references between model modules; pyflakes can't resolve them.
+"app/models/*.py" = ["F821"]
