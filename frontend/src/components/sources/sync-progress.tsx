@@ -18,7 +18,11 @@ export function SyncProgress({
 }) {
   const [job, setJob] = useState<SyncJob | null>(null);
   const onSettledRef = useRef(onSettled);
-  onSettledRef.current = onSettled;
+  // Updated after render (not during it); declared before the polling effect so it is
+  // current by the time a poll finishes.
+  useEffect(() => {
+    onSettledRef.current = onSettled;
+  });
 
   useEffect(() => {
     let cancelled = false;

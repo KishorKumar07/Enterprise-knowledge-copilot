@@ -12,13 +12,15 @@ function tempId() {
 
 export function useChat(conversationId: string) {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  // Which conversation id has finished loading. `isLoading` is derived from it, so there is
+  // no synchronous setState in the effect below.
+  const [loadedId, setLoadedId] = useState<string | null>(null);
+  const isLoading = loadedId !== conversationId;
   const [isStreaming, setIsStreaming] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    setIsLoading(true);
     chatService
       .getConversation(conversationId)
       .then((conv) => {
@@ -28,7 +30,7 @@ export function useChat(conversationId: string) {
         if (!cancelled) toast.error("Could not load this conversation.");
       })
       .finally(() => {
-        if (!cancelled) setIsLoading(false);
+        if (!cancelled) setLoadedId(conversationId);
       });
     return () => {
       cancelled = true;

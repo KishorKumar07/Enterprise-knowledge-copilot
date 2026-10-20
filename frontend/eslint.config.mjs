@@ -15,10 +15,11 @@ const eslintConfig = defineConfig([
   ]),
   {
     // These two rules (from the React Compiler-era eslint-plugin-react-hooks)
-    // flag 8 existing components. The app works, and rewriting them blind could
-    // change UI behaviour, so they are warnings: still listed on every run, but
-    // they don't block CI/deploys. TODO: refactor the flagged effects/refs, then
-    // delete this block.
+    // flag 5 remaining components: the Sources dialogs/card and the Agent Ops page.
+    // They are ordinary "reset or fetch when the dialog opens / the page mounts"
+    // effects. The app works, and rewriting them without browser tests could break the
+    // Sources flow, so they stay warnings: listed on every run, but they don't block
+    // CI/deploys. TODO: refactor them with UI tests in place, then delete this block.
     rules: {
       "react-hooks/set-state-in-effect": "warn",
       "react-hooks/refs": "warn",
