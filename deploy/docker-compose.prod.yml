@@ -1,0 +1,106 @@
+# Production stack on the shared EC2 app server (deployed to /opt/apps/ekc/).
+#
+# - App images are PULLED from ECR; the server never builds anything.
+# - The deploy workflow sets ECR_REGISTRY and IMAGE_TAG (git SHA) at deploy time.
+# - Secrets live in /opt/apps/ekc/.env on the server (never in git).
+# - Nothing is published on a public interface. Every port binds to 127.0.0.1,
+#   so only Nginx (on the host) can reach them; Postgres is not published at all.
+# - This stack has its OWN Postgres, separate from System Design Studio's.
+#   Different project name => different network and volume, so the two apps
+#   cannot touch each other's data.
+
+name: ekc
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: ekc-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ekc
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: enterprise_knowledge_copilot
+    volumes:
+      - ekc_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ekc -d enterprise_knowledge_copilot"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    image: ${ECR_REGISTRY:?set ECR_REGISTRY}/ekc-backend:${IMAGE_TAG:-latest}
+    container_name: ekc-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      # Service names, not localhost: containers reach each other over the
+      # compose network.
+      DATABASE_URL: postgresql+asyncpg://ekc:${POSTGRES_PASSWORD}@postgres:5432/enterprise_knowledge_copilot
+      PHOENIX_ENDPOINT: http://phoenix:6006
+    ports:
+      - "127.0.0.1:7860:7860"
+
+  frontend:
+    image: ${ECR_REGISTRY}/ekc-frontend:${IMAGE_TAG:-latest}
+    container_name: ekc-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      # 3000 on the host is System Design Studio's.
+      - "127.0.0.1:3100:3000"
+
+  # --- agent_ops stack ---
+
+  phoenix:
+    image: arizephoenix/phoenix:latest
+    container_name: ekc-phoenix
+    restart: unless-stopped
+    environment:
+      # Served under /phoenix/ behind Nginx (which also puts a password in front:
+      # Phoenix itself has no auth and stores prompts and retrieved documents).
+      PHOENIX_HOST_ROOT_PATH: /phoenix
+    volumes:
+      - ekc_phoenix_data:/mnt/data
+    ports:
+      - "127.0.0.1:6006:6006"
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: ekc-prometheus
+    restart: unless-stopped
+    volumes:
+      - ./observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ekc_prometheus_data:/prometheus
+    ports:
+      # Not proxied by Nginx. Reach it with an SSH tunnel if you need the raw UI.
+      - "127.0.0.1:9090:9090"
+
+  grafana:
+    image: grafana/grafana-oss:latest
+    container_name: ekc-grafana
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+      GF_SECURITY_ADMIN_USER: ${GF_SECURITY_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GF_SECURITY_ADMIN_PASSWORD:?set GF_SECURITY_ADMIN_PASSWORD in .env}
+      GF_SERVER_ROOT_URL: ${PUBLIC_URL:?set PUBLIC_URL}/grafana/
+      GF_SERVER_SERVE_FROM_SUB_PATH: "true"
+    volumes:
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ekc_grafana_data:/var/lib/grafana
+    ports:
+      - "127.0.0.1:3001:3000"
+
+volumes:
+  ekc_postgres_data:
+  ekc_phoenix_data:
+  ekc_prometheus_data:
+  ekc_grafana_data:
