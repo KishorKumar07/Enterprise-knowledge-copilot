@@ -102,8 +102,24 @@ cd /opt/apps/ekc && IMAGE_TAG=<older-sha> ECR_REGISTRY=<registry> docker compose
 docker logs --tail 100 ekc-backend
 ```
 
-The server is stopped between demos to save credits; it keeps its Elastic IP, disk and DNS names
-and comes back by itself (containers restart, certificates renew while it is running).
+### Stopping and starting the server (to save credits)
+
+The instance is stopped between demos. It keeps its Elastic IP, disk and DNS names, and everything
+restarts by itself (containers have `restart: unless-stopped`; Nginx, Docker and the SSM agent are
+enabled at boot).
+
+| Step | When |
+|---|---|
+| EC2 → select the instance → **Instance state → Stop** (never *Terminate*, which deletes it) | after the last push has deployed |
+| GitHub → Settings → Secrets and variables → Actions → Variables → set `DEPLOY_ENABLED` to `false` | while it is stopped, otherwise the deploy job fails because nothing answers over SSM |
+| **Start** the instance, wait ~3 minutes, open the site | before a demo |
+| Set `DEPLOY_ENABLED` back to `true` | after it is running again |
+
+- Let's Encrypt certificates (90 days) renew only while the server is running. Start it at least
+  once every couple of months; if the site ever shows a certificate error after a long stop, run
+  `sudo certbot renew` in a Session Manager terminal.
+- Stopped, the bill is only the disk, the Elastic IP, ECR and S3 (a few dollars a month).
+- Documentation-only pushes (`*.md`) do not trigger a deploy.
 
 ## Demonstration: a bad commit cannot deploy
 
