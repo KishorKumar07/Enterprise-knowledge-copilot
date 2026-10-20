@@ -20,11 +20,30 @@ A full-stack AI assistant that connects to a company's Google Drive and Slack, i
 **Data/AI**: PostgreSQL + pgvector, sentence-transformers (embeddings + reranking), Gemini / Groq
 **Agent ops**: OpenTelemetry (instrumentation) → Arize Phoenix (LLM trace waterfalls, token/cost) + Prometheus/Grafana (system metrics, dashboards, alerting) + Postgres `agent_runs`/`agent_steps` (durable per-turn audit trail)
 
+## Live demo and deployment
+
+**https://kishor-ekc.duckdns.org** — deployed to AWS (EC2, ECR, SSM) by GitHub Actions with OIDC, no stored
+cloud credentials. See [DEPLOYMENT.md](DEPLOYMENT.md) for the architecture, the pipeline, what went wrong along
+the way, and a Jenkins vs GitHub Actions comparison.
+
 ## Running locally
 
+### Option A: everything in Docker (matches production)
+
 ```bash
-# Database
-docker compose up -d
+cp backend/.env.docker.example backend/.env.docker   # add your API keys, JWT secret and Fernet key
+docker compose up -d --build
+docker compose exec backend alembic upgrade head
+```
+
+App on http://localhost:3000, API on :7860, Grafana on :3001 (`admin` / `admin`), Phoenix on :6006.
+
+### Option B: run the app on your machine, infrastructure in Docker
+
+```bash
+# Database only (add phoenix prometheus grafana for the observability stack; note that Prometheus
+# scrapes the backend *container*, so Grafana charts stay empty when the backend runs on the host)
+docker compose up -d postgres
 
 # Backend
 cd backend && python -m venv venv && ./venv/Scripts/activate
@@ -43,7 +62,7 @@ Needs `GEMINI_API_KEY`/`GROQ_API_KEY` for chat, and Google/Slack OAuth credentia
 
 ## Agent ops
 
-`docker compose up -d` also starts the observability stack (Postgres already covered above):
+`docker compose up -d --build` (Option A above) also starts the observability stack:
 
 - **Phoenix** — LLM trace waterfalls, prompts/completions, token usage: [http://localhost:6006](http://localhost:6006)
 - **Grafana** — system/agent dashboards (pre-provisioned "EKC — Agent Ops" dashboard): [http://localhost:3001](http://localhost:3001)
