@@ -1,18 +1,20 @@
 name: CI
 
-# Runs on every push and PR to main, and is also callable from the deploy
-# workflow so a deploy can only start after these checks are green.
+# Pull requests run it directly. A push to main runs it through deploy.yml
+# (workflow_call), so a deploy can only start after these checks are green.
+# It deliberately has no `push` trigger of its own: that ran every check twice
+# per push, and the two copies shared a concurrency group and could cancel the
+# one the deploy was waiting on.
 on:
-  push:
-    branches: [main]
   pull_request:
     branches: [main]
   workflow_call:
 
-# A newer push to the same branch makes the older run pointless.
+# A newer commit on the same PR makes the older run pointless. Never cancel
+# when called from deploy: that would fail a release that was already underway.
 concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  group: ci-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
