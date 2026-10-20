@@ -52,6 +52,24 @@ Prometheus metric (Grafana) and a durable `agent_steps` row in Postgres (the in-
 page). The LLM layer adds `llm_call_total`, `llm_fallback_total` and `llm_latency_seconds`, so a
 failing or slow provider shows up on the dashboard.
 
+## Alerting
+
+Application behaviour is watched by Prometheus, Grafana and Phoenix, which run on the same box as
+the app and so cannot report their own death. Host-level problems are watched from outside by
+**CloudWatch alarms**, all sending email through one SNS topic:
+
+| Alarm | Fires when |
+|---|---|
+| CPU | average CPU above 80% for 10 minutes |
+| Status check | the EC2 system or instance health check fails twice in a row |
+| Memory | `mem_used_percent` above 85% (CloudWatch agent) |
+| Disk | `disk_used_percent` on `/` above 80% (CloudWatch agent) |
+
+The alarm path was proven end to end: a first memory alarm with a mistyped threshold fired and the
+email arrived. Memory and disk need the CloudWatch agent (`deploy/cloudwatch-agent.sh`) because EC2
+only reports CPU, network and health checks from the outside. SSH access from a personal IP was
+removed; the browser-based Session Manager terminal and the SSM deploy path need no inbound port.
+
 ## Verified, not assumed
 
 - **Restore test:** a backup pulled from S3 was restored into a scratch database; all 12 tables
