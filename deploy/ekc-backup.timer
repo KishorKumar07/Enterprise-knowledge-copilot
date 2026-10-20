@@ -1,0 +1,11 @@
+[Unit]
+Description=Run the Enterprise Knowledge Copilot Postgres backup every night
+
+[Timer]
+# 20:45 UTC = 02:15 IST, 15 minutes after the SDS backup so the two never overlap.
+# Persistent: if the server was off, run on next boot.
+OnCalendar=*-*-* 20:45:00 UTC
+Persistent=true
+
+[Install]
+WantedBy=timers.target

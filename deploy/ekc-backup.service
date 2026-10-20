@@ -1,0 +1,9 @@
+[Unit]
+Description=Enterprise Knowledge Copilot Postgres backup to S3
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+User=ec2-user
+ExecStart=/opt/apps/backup/pg-backup-ekc.sh
